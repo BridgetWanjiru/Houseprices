@@ -1,63 +1,72 @@
 # Housing Prices: Categorical Encoding and Prediction Pipeline
 
-**Author:** Bridget  
-**Course:** DAS  
+**Author:** Bridget
+**Course:** DAS
 
 ## Project Overview
-This project focuses on predicting residential home sales prices . The primary goal was to explore, implement, and evaluate various **categorical encoding techniques** to see how different data transformation methods impact the predictive performance of a regularized linear model (`Ridge Regression`).
-
----
+This project focuses on predicting residential home sale prices. The goal 
+was to encode the dataset's categorical features by reasoning about what 
+each variable represents rather than applying one method uniformly or 
+choosing whichever encoder produced the best score and evaluate the 
+result using a regularized linear model (Ridge Regression).
 
 ## Project Pipeline Structure
+The notebook follows these steps:
 
-The notebook is divided into clear machine learning steps:
+- **Step One: Library Imports & Data Loading** — Initializing core data 
+  analysis tools (pandas, numpy) and importing the training and test sets.
+- **Step Two: Target Variable Distribution Check** — Visualizing the 
+  distribution of `SalePrice` to check for skew and anomalies.
+- **Step Three: Fix `MSSubClass`'s Data Type** — Converting `MSSubClass` 
+  from integer to string, since its values are building-class codes, not 
+  quantities.
+- **Step Four: Handle Missing Values** — Separating columns where NaN means 
+  "feature doesn't exist" (filled with `'None'` as a real category) from 
+  columns where NaN means genuinely missing data (imputed with median/mode).
+- **Step Five: Validation Framework** — An `evaluate_model` function using 
+  an 80/20 train/validation split to score predictions via R².
+- **Step Six: Ordinal Encoding** — Manually ranked categorical columns 
+  (e.g. quality ratings from Poor to Excellent) encoded in their true order.
+- **Step Seven: One-Hot Encoding** — Categorical columns with no natural 
+  order (e.g. Neighborhood, SaleType) encoded as separate binary columns.
+- **Step Eight: Validate the Full Encoding** — Evaluating the combined 
+  ordinal + one-hot feature set.
+- **Step Nine: Generate Final Test Predictions** — Fitting the final Ridge 
+  model and exporting the submission file.
 
-*   **Step One: Library Imports & Data Loading** — Initializing core data analysis tools (`pandas`, `numpy`) and importing the training and test sets.
-*   **Step Two: Target Variable Distribution Check** — Visualizing the distribution of `SalePrice` to analyze target skewness and potential data anomalies.
-*   **Step Three: Automated Data Processing** — Separating the data into features (`X`) and targets (`y`), identifying variable types, and filling missing values for both categorical and numerical columns.
-*   **Step Four: Validation Framework** — Creating an `evaluate_model` function utilizing an 80/20 train/validation split to benchmark predictive consistency via the $R^2$ metric.
-*   **Step Five & Six: Feature Engineering & Encoding** — Benchmarking six unique categorical data transformation techniques.
-*   **Step Seven: Inference & Test Predictions** — Compiling a performance summary table and exporting final test set predictions.
+## Encoding Approach
+Each column was encoded according to what it actually represents:
 
----
-
-## Categorical Encoding Methods Evaluated
-
-We systematically tested six different approaches to transform the text features into numeric values for our machine learning model:
-
-1.  **Label Encoding:** Converting each unique category into a basic sequential integer.
-2.  **One-Hot Encoding (OHE):** Creating separate binary (0 or 1) columns for every unique category value present.
-3.  **Feature Hashing:** Using a dictionary-based hashing function to map high-cardinality categorical attributes into a fixed 1,000-dimensional space.
-4.  **Frequency Encoding:** Mapping categories directly to their statistical frequency percentage within the training data.
-5.  **Target Encoding:** Mapping categories to the mean value of the target variable (`SalePrice`).
-6.  **K-Fold Target Encoding:** An advanced version of target encoding that uses out-of-fold averages to limit training data leakage.
-
----
+- **Ordinal encoding** for columns with a genuine rank (quality ratings, 
+  basement finish type, functional deductions, etc.), so the model can use 
+  the order between categories. Each order was defined manually from the 
+  data dictionary,not assigned automatically or alphabetically.
+- **One-hot encoding** for columns with no natural order (Neighborhood, 
+  MSZoning, Foundation, SaleType, MSSubClass, etc.), so no false ranking is 
+  introduced.
 
 ## Performance Summary
-
-The evaluation metric used to score the models is the **Validation $R^2$ Score** (Coefficient of Determination). The results across the models are as follows:
-
-| Encoding Method | Validation $R^2$ Score |
-| :--- | :---: |
-| **Method 3: Feature Hashing** | **0.8863 (Best)** |
-| Cyclic Encoding (OHE + Month Transformation) | 0.8848 |
-| Method 5: Target Encoding | 0.8718 |
-| Method 2: One-Hot Encoding | 0.8648 |
-| Method 6: K-Fold Target Encoding | 0.8548 |
-| Method 4: Dataset Statistic (Frequency) | 0.8447 |
-| Method 1: Label Encoding Baseline | 0.8444 |
-
----
+| Step | Validation R² Score |
+|---|---|
+| Ordinal encoding only (quality columns + numeric features) | 0.8393 |
+| Full pipeline: ordinal + one-hot combined | 0.8778 |
 
 ## Key Conclusions
-
-*   **Feature Hashing provided the highest predictive accuracy (0.8863).** It successfully compressed complex text categories (like neighborhoods or exterior building materials) into a dense, manageable layout without creating an exploding number of columns that could confuse a linear model.
-*   **Plain One-Hot Encoding created a minor bottleneck.** While it outperformed the simple baseline, creating hundreds of loose binary columns led to slight overfitting when dealing with highly skewed house prices and raw numerical features. 
-*   **Combining Hashing with Ridge Regression was highly effective.** The model remained highly stable and resistant to scale disparities, proving to be the most robust approach for generating our final test set submission.
-
----
+- **`MSSubClass`** is stored as a number but represents categorical building 
+  codes. Left unconverted, a linear model would wrongly treat larger codes 
+  as "more" of something — correcting its type was necessary for the 
+  encoding to be valid, independent of its effect on the score.
+- **NaN doesn't mean the same thing in every column.** Columns like 
+  `PoolQC` or `GarageType` use NaN to indicate the feature is absent; 
+  columns like `LotFrontage` or `Electrical` use NaN to indicate a value 
+  wasn't recorded. Each required different handling.
+- **Matching encoding to variable meaning**, rather than sweeping several 
+  encoders and reporting the highest score, was the actual goal of this 
+  assignment — the R² score here is a validation check, not the basis for 
+  selecting the method.
 
 ## Repository Deliverables
-*   `Houseprices.ipynb` — The primary workspace notebook containing all documented steps and code blocks.
-*   `my_submission.csv` — The final formatted output file mapping home IDs to predicted sales prices, exported cleanly without row index counts.
+- `Houseprices.ipynb` — The primary workspace notebook containing all 
+  documented steps and code blocks.
+- `my_submission.csv` — The final formatted output file mapping home IDs to 
+  predicted sale prices, exported cleanly without row index counts.
